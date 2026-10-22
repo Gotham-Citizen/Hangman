@@ -1,4 +1,3 @@
-import { useState } from "react"
 import clsx from "clsx"
 
 export default function Chip({index, name, backgroundColor, color, wrongGuessedCount}) {

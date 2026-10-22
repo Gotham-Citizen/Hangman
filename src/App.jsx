@@ -1,158 +1,267 @@
-import React from "react";
-import { languages } from "./languages.js";
-import { useState } from "react"
-import Chip from "./Chip.jsx";
+import { useState, useEffect, useCallback, useMemo } from "react"
 import clsx from "clsx";
-import { getFarewellText, getRandomWord } from "./utils.js";
+import { getRandomWord } from "./utils.js";
 import Confetti from "react-confetti"
+import { useTranslation } from "react-i18next";
+import Chip from "../components/Chip.jsx";
+import Keyboard from "../components/Keyboard.jsx";
+import WordDisplay from "../components/WordDisplay.jsx";
+import DifficultySelector from "../components/DifficultySelector.jsx";
+import LevelUpModal from "../components/LevelUpModal.jsx";
+import WinProgressModal from "../components/WinProgressModal.jsx";
+import GameStatus from "../components/GameStatus.jsx";
+import { languages } from "./languages.js";
+import { difficultyOrder, WINS_NEEDED, ALPHABET } from "./constants.js";
+import { useWindowSize } from "./hooks/useWindowSize.js";
+import { loadGameState, saveGameState } from "./storage.js";
 
-export default function AssemblyEndGame() {
-  const [currentWord, setCurrentWord] = useState(getRandomWord)
-  const [guessedLetters, setGuessedLetters] = useState([])
-  const wrongGuessedCount = guessedLetters.filter(letter => !currentWord.includes(letter)).length;
-  const isGameWon = currentWord.split('').every(letter => guessedLetters.includes(letter))
-  const isGameLost = wrongGuessedCount >= languages.length - 1 
+export default function App() {
+  const { t } = useTranslation()
+  const savedState = loadGameState()
+  const { width, height } = useWindowSize()
+
+  const [difficulty, setDifficulty] = useState(savedState?.difficulty || "easy")
+  const [currentWordData, setCurrentWordData] = useState(
+    () => savedState?.currentWordData || getRandomWord(savedState?.difficulty || "easy")
+  )
+  const currentWord = currentWordData.word
+  const currentCategory = currentWordData.category
+  const [guessedLetters, setGuessedLetters] = useState(savedState?.guessedLetters || [])
+  const [hintUsed, setHintUsed] = useState(savedState?.hintUsed || false)
+  const [winStreak, setWinStreak] = useState(savedState?.winStreak || 0)
+  const [bestStreak, setBestStreak] = useState(savedState?.bestStreak || 0)
+  const [unlockedDifficulties, setUnlockedDifficulties] = useState(
+    savedState?.unlockedDifficulties || ["easy"]
+  )
+  const [showLevelUp, setShowLevelUp] = useState(false)
+  const [showWinProgress, setShowWinProgress] = useState(false)
+
+  const wrongGuessedCount = useMemo(
+    () => guessedLetters.filter(letter => !currentWord.includes(letter)).length,
+    [guessedLetters, currentWord]
+  )
+  const isGameWon = useMemo(
+    () => currentWord.split('').every(letter => guessedLetters.includes(letter)),
+    [currentWord, guessedLetters]
+  )
+  const isGameLost = wrongGuessedCount >= languages.length - 1
   const isGameOver = isGameWon || isGameLost
   const lastGuessedLetter = guessedLetters.at(-1)
   const numGuessesLeft = languages.length - 1 - wrongGuessedCount
 
-  // console.log(`You have ${numGuessesLeft}`);
-  const [languagesArray, setLanguagesArray] = useState(languages)
-  const chipElements = languagesArray.map((language, index) =>
-    <Chip key = {index} 
-          index = {index}
-          name = {language.name} 
-          backgroundColor = {language.backgroundColor} 
-          color={language.color}
-          wrongGuessedCount = {wrongGuessedCount}  />
-  )
+  const chipElements = useMemo(() =>
+    languages.map((language, index) =>
+      <Chip
+        key={index}
+        index={index}
+        name={language.name}
+        backgroundColor={language.backgroundColor}
+        color={language.color}
+        wrongGuessedCount={wrongGuessedCount}
+      />
+    ), [wrongGuessedCount])
 
+  const addLetter = useCallback((letter) => {
+    if (guessedLetters.includes(letter)) return
 
-  const letterElements = [...currentWord].map((letter,index) => 
-    <span 
-      key={index} 
-      className={clsx(
-        "current-letter",
-        (isGameOver && !guessedLetters.includes(letter)) && "missed-letter"
-      )}>
-        {(guessedLetters.includes(letter) || isGameOver) && letter.toUpperCase()}
-    </span>)
-  
-  const alphabet = "abcdefghijklmnopqrstuvwxyz"
-  const keyboardElements = [...alphabet].map(letter => 
-    <button 
-      key={letter} 
-      className={clsx(
-        guessedLetters.includes(letter) && currentWord.includes(letter) && 'right-letter', 
-        guessedLetters.includes(letter) && !currentWord.includes(letter) && 'wrong-letter' 
-      )}
-      aria-label={letter.toUpperCase()} 
-      onClick={() => {addLetter(letter)}}
-      disabled = {isGameOver} 
-      aria-disabled ={guessedLetters.includes(letter)}>
-        {letter.toUpperCase()}
-    </button>)
+    const newGuessed = [...guessedLetters, letter]
+    setGuessedLetters(newGuessed)
 
-  function addLetter(letter) {
-    setGuessedLetters(prevGuessedLetters => 
-      prevGuessedLetters.includes(letter) ? prevGuessedLetters :  [...prevGuessedLetters, letter])
-  }
+    const currentIdx = difficultyOrder.indexOf(difficulty)
+    const hasNextDifficulty = currentIdx < difficultyOrder.length - 1
 
-  function renderGameStatus() {
-    if (isGameOver) {
-      if (isGameWon) {
-        return (<>
-          <h2>You win!</h2>
-          <p>Congratulations!🎉</p>
-        </>)
+    const newWrongCount = newGuessed.filter(l => !currentWord.includes(l)).length
+    const newWon = currentWord.split('').every(l => newGuessed.includes(l))
+    const newLost = newWrongCount >= languages.length - 1
+
+    if (newWon) {
+      const newStreak = winStreak + 1
+      setWinStreak(newStreak)
+      setBestStreak(prev => Math.max(prev, newStreak))
+
+      if (newStreak >= WINS_NEEDED) {
+        if (hasNextDifficulty) {
+          const nextLevel = difficultyOrder[currentIdx + 1]
+          if (!unlockedDifficulties.includes(nextLevel)) {
+            const updatedUnlocked = [...unlockedDifficulties, nextLevel]
+            setUnlockedDifficulties(updatedUnlocked)
+            setShowLevelUp(true)
+          }
+        }
       } else {
-        return (<>
-          <h2>You lose!</h2>
-          <p>Better start learning Assembly!😭</p>
-        </>) 
+        if (hasNextDifficulty && newStreak === WINS_NEEDED - 1) {
+          setShowWinProgress(true)
+        }
       }
-    } else {
-      if (wrongGuessedCount) {
-        return <p className="farewell-message">{ getFarewellText(languages[wrongGuessedCount - 1].name) }</p>
+    } else if (newLost) {
+      setWinStreak(0)
+    }
+  }, [guessedLetters, difficulty, currentWord, winStreak, unlockedDifficulties])
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (isGameOver || showLevelUp || showWinProgress) return
+      const key = e.key.toLowerCase()
+      if (ALPHABET.includes(key)) {
+        addLetter(key)
       }
     }
-  }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [addLetter, isGameOver, showLevelUp, showWinProgress])
+
+  const nextDifficulty = difficultyOrder[difficultyOrder.indexOf(difficulty) + 1]
+
+  const persistState = useCallback((overrides = {}) => {
+    const stateToSave = {
+      difficulty,
+      currentWordData,
+      guessedLetters,
+      hintUsed,
+      winStreak,
+      bestStreak,
+      unlockedDifficulties,
+      ...overrides,
+    }
+    saveGameState(stateToSave)
+  }, [difficulty, currentWordData, guessedLetters, hintUsed, winStreak, bestStreak, unlockedDifficulties])
+
+  useEffect(() => {
+    persistState()
+  }, [guessedLetters, difficulty, hintUsed, winStreak, bestStreak, unlockedDifficulties, currentWordData, persistState])
 
   function startNewGame() {
-    setCurrentWord(getRandomWord())
+    setCurrentWordData(getRandomWord(difficulty))
     setGuessedLetters([])
+    setHintUsed(false)
   }
 
+  const handleDifficultyChange = useCallback((level) => {
+    const newWordData = getRandomWord(level)
+    setDifficulty(level)
+    setCurrentWordData(newWordData)
+    setGuessedLetters([])
+    setHintUsed(false)
+    setShowLevelUp(false)
+    setShowWinProgress(false)
+  }, [])
+
+  const handleLevelUpChoice = useCallback((accept) => {
+    if (accept) {
+      const currentIdx = difficultyOrder.indexOf(difficulty)
+      const nextLevel = difficultyOrder[currentIdx + 1]
+      handleDifficultyChange(nextLevel)
+    } else {
+      setShowLevelUp(false)
+    }
+  }, [difficulty, handleDifficultyChange])
+
+  function handleWinProgressContinue() {
+    setShowWinProgress(false)
+  }
 
   return (
     <main>
-      { 
-        isGameWon && 
-        <Confetti 
-          recycle={false} 
-          numberOfPieces={1000} 
+      {showLevelUp && (
+        <LevelUpModal nextDifficulty={nextDifficulty} onChoice={handleLevelUpChoice} />
+      )}
+      {showWinProgress && (
+        <WinProgressModal nextDifficulty={nextDifficulty} onContinue={handleWinProgressContinue} />
+      )}
+      {
+        isGameWon &&
+        <Confetti
+          recycle={false}
+          numberOfPieces={1000}
         />
       }
       {
-        isGameLost && 
-        <Confetti 
-          width={window.innerWidth}
-          height={window.innerHeight}
-          colors={['#444', '#666', '#888']} 
-          recycle={false} 
-          numberOfPieces={100} 
-          gravity={0.1} 
-          drawShape={(ctx) => 
-            {
-              ctx.font = '20px serif'; 
-              ctx.fillText('😢', 0, 0);
-            }
-        }/> 
+        isGameLost &&
+        <Confetti
+          width={width}
+          height={height}
+          colors={['#444', '#666', '#888']}
+          recycle={false}
+          numberOfPieces={100}
+          gravity={0.1}
+          drawShape={(ctx) => {
+            ctx.font = '20px serif';
+            ctx.fillText('😢', 0, 0);
+          }}
+        />
       }
       <header>
         <h1>Assembly: Endgame</h1>
-        <p>Guess the word within 8 attempts to keep the programming world safe from assembly! </p>
-        <p aria-hidden="true">You have {numGuessesLeft} { numGuessesLeft <= 1 ? "attempt" : "attempts"}</p>
+        <p>{t("subtitle")}</p>
+        <p aria-hidden="true">
+          {isGameOver
+            ? t("bestStreak", { count: bestStreak })
+            : t("attemptsLeft", { count: numGuessesLeft })}
+        </p>
       </header>
-      <section 
+      <DifficultySelector
+        difficulty={difficulty}
+        unlockedDifficulties={unlockedDifficulties}
+        onChange={handleDifficultyChange}
+      />
+      <section
         aria-live="polite"
         role="status"
         className={clsx("game-status", {
-          won : isGameWon, 
-          lost : isGameLost,
+          won: isGameWon,
+          lost: isGameLost,
           farewell: !isGameOver && wrongGuessedCount
         })}
       >
-        {renderGameStatus()}
+        <GameStatus isGameOver={isGameOver} isGameWon={isGameWon} wrongGuessedCount={wrongGuessedCount} />
       </section>
       <section className="chips-container">
         {chipElements}
       </section>
-      <section className="word">
-        {letterElements}
+      <WordDisplay currentWord={currentWord} guessedLetters={guessedLetters} isGameOver={isGameOver} />
+      <section className="hint-area">
+        {!isGameOver && (
+          hintUsed ? (
+            <p className="hint-message">{t("hintMessage", { category: t(currentCategory) })}</p>
+          ) : (
+            <button
+              className="hint-button"
+              onClick={() => setHintUsed(true)}
+            >
+              {t("hint")}
+            </button>
+          )
+        )}
       </section>
-      <section 
+      <section
         className="sr-only"
         aria-live="polite"
         role="status"
       >
-        <p>{ 
-              currentWord.includes(lastGuessedLetter) ? 
-              `You guessed right! Letter ${lastGuessedLetter} is in` : 
-              `You guessed wrong! Letter ${lastGuessedLetter} is not in`
+        {lastGuessedLetter && (
+          <>
+            <p>{
+              currentWord.includes(lastGuessedLetter) ?
+                t("guessedRight", { letter: lastGuessedLetter }) :
+                t("guessedWrong", { letter: lastGuessedLetter })
             }
-            You have {numGuessesLeft} { numGuessesLeft <= 1 ? "attempt" : "attempts"}
-        </p>
-        <p>Current word: 
-        { currentWord
-          .split("")
-          .map(letter => 
-            guessedLetters.includes(letter) ? letter + "." : "blank.").join(" ") }</p>
+              {t("attemptsLeft", { count: numGuessesLeft })}
+            </p>
+            <p>{t("currentWord")}
+              {currentWord
+                .split("")
+                .map(letter =>
+                  guessedLetters.includes(letter) ? letter + "." : "blank.").join(" ")}</p>
+          </>
+        )}
       </section>
-      <section className="keyboard" aria-label="keyboard">
-        {keyboardElements}
-      </section>
-      {isGameOver && <button className = "new-game" onClick={startNewGame}>New Game</button> }
+      <Keyboard
+        guessedLetters={guessedLetters}
+        currentWord={currentWord}
+        isGameOver={isGameOver}
+        onGuess={addLetter}
+      />
+      {isGameOver && <button className="new-game" onClick={startNewGame}>{t("newGame")}</button>}
     </main>
   )
 }
