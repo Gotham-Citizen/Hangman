@@ -1,19 +1,14 @@
 import clsx from "clsx"
 
-export default function Chip({index, name, backgroundColor, color, wrongGuessedCount}) {
-  const styles = {
-    backgroundColor: backgroundColor,
-    color: color
-  }
+export default function Chip({ index, name, backgroundColor, color, wrongGuessedCount }) {
+  const styles = { backgroundColor, color }
 
   return (
-    <span 
-      className={clsx(
-        "chip" ,
-        (wrongGuessedCount - 1 >= index) && "lost"
-      )}
-      style={styles} >
-        {name}
+    <span
+      className={clsx("chip", wrongGuessedCount > index && "lost")}
+      style={styles}
+    >
+      {name}
     </span>
   )
 }

@@ -17,7 +17,7 @@ import { loadGameState, saveGameState } from "./storage.js";
 
 export default function App() {
   const { t } = useTranslation()
-  const savedState = loadGameState()
+  const [savedState] = useState(loadGameState)
   const { width, height } = useWindowSize()
 
   const [difficulty, setDifficulty] = useState(savedState?.difficulty || "easy")
@@ -52,7 +52,7 @@ export default function App() {
   const chipElements = useMemo(() =>
     languages.map((language, index) =>
       <Chip
-        key={index}
+        key={language.name}
         index={index}
         name={language.name}
         backgroundColor={language.backgroundColor}
@@ -131,7 +131,7 @@ export default function App() {
   }, [guessedLetters, difficulty, hintUsed, winStreak, bestStreak, unlockedDifficulties, currentWordData, persistState])
 
   function startNewGame() {
-    setCurrentWordData(getRandomWord(difficulty))
+    setCurrentWordData(getRandomWord(difficulty, currentWord))
     setGuessedLetters([])
     setHintUsed(false)
   }
@@ -142,9 +142,10 @@ export default function App() {
     setCurrentWordData(newWordData)
     setGuessedLetters([])
     setHintUsed(false)
+    if (level !== difficulty) setWinStreak(0)
     setShowLevelUp(false)
     setShowWinProgress(false)
-  }, [])
+  }, [difficulty])
 
   const handleLevelUpChoice = useCallback((accept) => {
     if (accept) {

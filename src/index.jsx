@@ -1,15 +1,14 @@
 import { createRoot } from 'react-dom/client';
 import { StrictMode } from 'react';
-import App from './App.jsx'; // Your main component
+import App from './App.jsx';
 import "./utils/i18n.js";
+import "./index.css";
 
-// 1. Target the 'root' element in your public/index.html
+// React mounts the entire application into the 'root' element in index.html
 const container = document.getElementById('root');
 
-// 2. Create a React root
 const root = createRoot(container);
 
-// 3. Render your App component
 root.render(
     <StrictMode>
         <App />

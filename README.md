@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 A word-guessing game built with React + Vite. Keep the programming world safe from Assembly by guessing words before all 8 of your language chips are eliminated!
 
-[![Demo](./media/demo.gif)](./media/demo-video.mp4)
+[![Demo](./media/demo.gif)](./media/demo.mp4)
 
 ## Live Demo
 

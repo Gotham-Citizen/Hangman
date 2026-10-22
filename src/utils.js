@@ -13,8 +13,12 @@ words.forEach(w => {
   (wordsByLength[len] ||= []).push(w);
 });
 
-export function getRandomWord(difficulty = "easy") {
+export function getRandomWord(difficulty = "easy", excludeWord) {
   const lengths = difficultyLengthMap[difficulty] || [5];
-  const pool = lengths.flatMap(len => wordsByLength[len] || []);
+  let pool = lengths.flatMap(len => wordsByLength[len] || []);
+  if (excludeWord) {
+    const filtered = pool.filter(w => w.word !== excludeWord);
+    if (filtered.length) pool = filtered;
+  }
   return pool[Math.floor(Math.random() * pool.length)];
 }

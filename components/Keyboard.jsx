@@ -16,7 +16,6 @@ export default function Keyboard({ guessedLetters, currentWord, isGameOver, onGu
             isGuessed && currentWord.includes(letter) && 'right-letter',
             isGuessed && !currentWord.includes(letter) && 'wrong-letter'
           )}
-          aria-label={letter.toUpperCase()}
           aria-pressed={isGuessed}
           onClick={() => onGuess(letter)}
           disabled={isGameOver || isGuessed}
