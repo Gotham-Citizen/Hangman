@@ -6,8 +6,15 @@ export default function WinProgressModal({ nextDifficulty, onContinue }) {
   const continueRef = useRef(null)
 
   useEffect(() => {
-    if (continueRef.current) {
-      continueRef.current.focus();
+    const previouslyFocused = document.activeElement
+    continueRef.current?.focus()
+    return () => {
+      if (previouslyFocused instanceof HTMLElement &&
+          previouslyFocused.isConnected && !previouslyFocused.disabled) {
+        previouslyFocused.focus()
+      } else {
+        document.querySelector("button.new-game")?.focus()
+      }
     }
   }, []);
 
@@ -28,7 +35,7 @@ export default function WinProgressModal({ nextDifficulty, onContinue }) {
   return (
     <div className="level-up-overlay" role="dialog" aria-modal="true" aria-labelledby="win-progress-text">
       <div className="level-up-prompt">
-        <p id="win-progress-text">{t("winProgress", { level: t(nextDifficulty) })}</p>
+        <h2 id="win-progress-text">{t("winProgress", { level: t(nextDifficulty) })}</h2>
         <div className="level-up-buttons">
           <button ref={continueRef} className="level-up-continue" onClick={onContinue}>{t("continue")}</button>
         </div>

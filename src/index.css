@@ -34,7 +34,7 @@ header > h1 {
 header > p {
     font-size: 0.875rem;
     max-width: 350px;
-    color: #8E8E8E;
+    color: #9E9E9E;
 }
 
 section.game-status{
@@ -61,7 +61,7 @@ section.game-status > p {
 }
 
 section.game-status.won {
-  background-color: #10a95b;
+  background-color: #0A7A42;
 }
 
 section.game-status.lost {
@@ -95,8 +95,7 @@ span.chip {
   position: relative;
 }
 
-span.chip.lost::before {
-  content: "💀";
+span.chip > span.chip-skull {
   position: absolute;
   display: flex;
   align-items: center;
@@ -106,7 +105,7 @@ span.chip.lost::before {
   font-size: 0.85rem;
   top: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 section.word {
@@ -130,7 +129,7 @@ section.word > span.current-letter {
 }
 
 section.word > span.missed-letter {
-  color: #ec5d49;
+  color: #FF8A7A;
 }
 
 section.keyboard {
@@ -150,6 +149,9 @@ section.keyboard > button {
   border: 1px solid #d7d7d7;
   border-radius: 3px;
   cursor: pointer;
+  color: #1E1E1E;
+  font-family: inherit;
+  font-size: 1rem;
 }
 
 section.keyboard >button.right-letter {
@@ -158,6 +160,7 @@ section.keyboard >button.right-letter {
 
 section.keyboard > button.wrong-letter {
   background-color: #ec5d49;
+  text-decoration: line-through;
 }
 
 button.new-game {
@@ -170,6 +173,9 @@ button.new-game {
     display: block;
     margin-inline: auto;
     cursor: pointer;
+    color: #1E1E1E;
+    font-family: inherit;
+    font-size: 1rem;
 }
 
 section.hint-area {
@@ -185,12 +191,13 @@ button.hint-button {
     height: 36px;
     padding: 6px 16px;
     cursor: pointer;
-    color: #F9F4DA;
+    color: #1E1E1E;
     font-size: 0.875rem;
+    font-family: inherit;
 }
 
 button.hint-button:hover {
-    background-color: #b86826;
+    text-decoration: underline;
 }
 
 p.hint-message {
@@ -199,7 +206,7 @@ p.hint-message {
     border-radius: 4px;
     padding: 8px 16px;
     font-style: italic;
-    color: #F9F4DA;
+    color: #1E1E1E;
     text-align: center;
     margin: 0;
 }
@@ -225,19 +232,19 @@ section.difficulty-selector {
 
 button.difficulty-button {
     background-color: #323232;
-    border: 1px solid #555;
+    border: 1px solid #9E9E9E;
     border-radius: 4px;
     height: 30px;
     padding: 4px 12px;
     cursor: pointer;
-    color: #8E8E8E;
+    color: #B3B3B3;
     font-size: 0.75rem;
     font-family: inherit;
 }
 
 button.difficulty-button.active {
     background-color: #11B5E5;
-    color: #F9F4DA;
+    color: #1E1E1E;
     border-color: #11B5E5;
 }
 
@@ -278,9 +285,10 @@ button.difficulty-button.locked:hover {
     max-width: 340px;
 }
 
-.level-up-prompt > p {
+.level-up-prompt > h2 {
     color: #F9F4DA;
     font-size: 1rem;
+    font-weight: 400;
     margin: 0 0 16px 0;
 }
 
@@ -298,14 +306,14 @@ button.level-up-continue {
     height: 36px;
     padding: 6px 20px;
     cursor: pointer;
-    color: #F9F4DA;
+    color: #1E1E1E;
     font-family: inherit;
     font-size: 0.875rem;
 }
 
 button.level-up-accept:hover,
 button.level-up-continue:hover {
-    background-color: #0e944f;
+    text-decoration: underline;
 }
 
 button.level-up-dismiss {
@@ -321,7 +329,7 @@ button.level-up-dismiss {
 }
 
 button.level-up-dismiss:hover {
-    background-color: #666;
+    background-color: #444;
 }
 
 button:focus-visible,

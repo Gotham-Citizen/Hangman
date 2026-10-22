@@ -18,6 +18,7 @@ export default function DifficultySelector({ difficulty, unlockedDifficulties, o
             isLocked && "locked"
           )}
           disabled={isLocked}
+          aria-current={difficulty === level ? "true" : undefined}
           onClick={() => onChange(level)}
         >
           {t(level)}
