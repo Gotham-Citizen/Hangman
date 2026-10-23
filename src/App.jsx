@@ -12,13 +12,11 @@ import WinProgressModal from "../components/WinProgressModal.jsx";
 import GameStatus from "../components/GameStatus.jsx";
 import { languages } from "./languages.js";
 import { difficultyOrder, WINS_NEEDED, ALPHABET } from "./constants.js";
-import { useWindowSize } from "./hooks/useWindowSize.js";
 import { loadGameState, saveGameState } from "./storage.js";
 
 export default function App() {
   const { t } = useTranslation()
   const [savedState] = useState(loadGameState)
-  const { width, height } = useWindowSize()
 
   const [difficulty, setDifficulty] = useState(savedState?.difficulty || "easy")
   const [currentWordData, setCurrentWordData] = useState(
@@ -202,7 +200,7 @@ export default function App() {
       )}
       <main inert={showLevelUp || showWinProgress}>
         {!prefersReducedMotion && isGameWon && (
-          <div aria-hidden="true">
+          <div aria-hidden="true" className="confetti-layer">
             <Confetti
               recycle={false}
               numberOfPieces={1000}
@@ -210,10 +208,8 @@ export default function App() {
           </div>
         )}
         {!prefersReducedMotion && isGameLost && (
-          <div aria-hidden="true">
+          <div aria-hidden="true" className="confetti-layer">
             <Confetti
-              width={width}
-              height={height}
               colors={['#444', '#666', '#888']}
               recycle={false}
               numberOfPieces={100}
@@ -254,9 +250,9 @@ export default function App() {
           {chipElements}
         </section>
         <WordDisplay currentWord={currentWord} guessedLetters={guessedLetters} isGameOver={isGameOver} />
-        <section className="hint-area">
-          {!isGameOver && (
-            hintUsed ? (
+        {!isGameOver && (
+          <section className="hint-area">
+            {hintUsed ? (
               <p
                 className="hint-message"
                 role="status"
@@ -272,9 +268,9 @@ export default function App() {
               >
                 {t("hint")}
               </button>
-            )
-          )}
-        </section>
+            )}
+          </section>
+        )}
         <section
           className="sr-only"
           aria-live="polite"

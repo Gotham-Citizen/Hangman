@@ -72,9 +72,7 @@ src/
 ├── utils.js                 # 难度 → 单词长度映射与随机选词
 ├── storage.js               # localStorage 读写辅助
 ├── index.jsx                # 应用入口
-├── index.css                # 全局样式
-├── hooks/
-│   └── useWindowSize.js     # 响应式窗口尺寸 Hook
+├── index.css                # 全局样式 + 设计令牌
 └── utils/
     ├── i18n.js              # i18next 配置
     └── locales/

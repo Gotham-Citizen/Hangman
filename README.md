@@ -72,9 +72,7 @@ src/
 ├── utils.js                 # Difficulty → word-length map & random word picker
 ├── storage.js               # localStorage load/save helpers
 ├── index.jsx                # App entry point
-├── index.css                # Global styles
-├── hooks/
-│   └── useWindowSize.js     # Responsive window-size hook
+├── index.css                # Global styles + design tokens
 └── utils/
     ├── i18n.js              # i18next configuration
     └── locales/
