@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Large demo video — too big for git (GitHub warns over 50MB, blocks over 100MB)
+media/*.mp4
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

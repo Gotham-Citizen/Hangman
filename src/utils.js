@@ -1,25 +1,24 @@
 import { words } from "./words";
 
-export function getFarewellText(language) {
-  const options = [
-    `Farewell, ${language}`,
-    `Adios, ${language}`,
-    `R.I.P., ${language}`,
-    `We'll miss you, ${language}`,
-    `Oh no, not ${language}!`,
-    `${language} bites the dust`,
-    `Gone but not forgotten, ${language}`,
-    `The end of ${language} as we know it`,
-    `Off into the sunset, ${language}`,
-    `${language}, it's been real`,
-    `${language}, your watch has ended`,
-    `${language} has left the building`
-  ];
+const difficultyLengthMap = {
+  easy: [5],
+  medium: [6],
+  hard: [7],
+  expert: [8, 9],
+};
 
-  const randomIndex = Math.floor(Math.random() * options.length);
-  return options[randomIndex]
-}
+const wordsByLength = {};
+words.forEach(w => {
+  const len = w.word.length;
+  (wordsByLength[len] ||= []).push(w);
+});
 
-export function getRandomWord() {
-  return words[Math.floor(Math.random() * words.length)]
+export function getRandomWord(difficulty = "easy", excludeWord) {
+  const lengths = difficultyLengthMap[difficulty] || [5];
+  let pool = lengths.flatMap(len => wordsByLength[len] || []);
+  if (excludeWord) {
+    const filtered = pool.filter(w => w.word !== excludeWord);
+    if (filtered.length) pool = filtered;
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
 }
